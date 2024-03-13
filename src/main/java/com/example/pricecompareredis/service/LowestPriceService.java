@@ -1,5 +1,6 @@
 package com.example.pricecompareredis.service;
 
+import com.example.pricecompareredis.vo.Keyword;
 import com.example.pricecompareredis.vo.Product;
 import com.example.pricecompareredis.vo.ProductGrp;
 
@@ -14,4 +15,6 @@ public interface LowestPriceService {
     int setNewProductGrp(ProductGrp newProductGrp);
 
     int setNewProductGrpToKeyword(String keyword, String prodGrpId, double score);
+
+    Keyword getLowestPriceProductByKeyword(String keyword);
 }

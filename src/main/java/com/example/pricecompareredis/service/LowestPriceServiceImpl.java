@@ -1,15 +1,14 @@
 package com.example.pricecompareredis.service;
 
+import com.example.pricecompareredis.vo.Keyword;
 import com.example.pricecompareredis.vo.Product;
 import com.example.pricecompareredis.vo.ProductGrp;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -47,5 +46,49 @@ public class LowestPriceServiceImpl implements LowestPriceService{
         redisTemplate.opsForZSet().add(keyword, prodGrpId, score);
         int rank = redisTemplate.opsForZSet().rank(keyword, prodGrpId).intValue();
         return rank;
+    }
+
+    @Override
+    public Keyword getLowestPriceProductByKeyword(String keyword) {
+        Keyword returnInfo = new Keyword();
+        List<ProductGrp> tempProdGrp = new ArrayList<>();
+
+        tempProdGrp = getProdGrpUsingKeyword(keyword);
+
+        returnInfo.setKeyword(keyword);
+        returnInfo.setProductGrpList(tempProdGrp);
+
+        return returnInfo;
+    }
+
+    public List<ProductGrp> getProdGrpUsingKeyword(String keyword) {
+        List<ProductGrp> returnInfo = new ArrayList<>();
+
+        List<String> prodGrpIdList = new ArrayList<>();
+        prodGrpIdList = List.copyOf(redisTemplate.opsForZSet().reverseRange(keyword, 0, 9));
+
+        List<Product> tempProdList = new ArrayList<>();
+
+        for(final String prodGrpId: prodGrpIdList) {
+            ProductGrp tempProdGrp = new ProductGrp();
+
+            Set prodAndPriceList = redisTemplate.opsForZSet().rangeWithScores(prodGrpId, 0, 9);
+            Iterator<Object> prodPriceObj = prodAndPriceList.iterator();
+
+            while (prodPriceObj.hasNext()) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                Map<String, Object> prodPriceMap = objectMapper.convertValue(prodPriceObj.next(), Map.class);
+                Product tempProduct = new Product();
+
+                tempProduct.setProductId(prodPriceMap.get("value").toString());
+                tempProduct.setPrice(Double.valueOf(prodPriceMap.get("score").toString()).intValue());
+                tempProdList.add(tempProduct);
+            }
+            tempProdGrp.setProdGrpId(prodGrpId);
+            tempProdGrp.setProductList(tempProdList);
+            returnInfo.add(tempProdGrp);
+        }
+
+        return returnInfo;
     }
 }
