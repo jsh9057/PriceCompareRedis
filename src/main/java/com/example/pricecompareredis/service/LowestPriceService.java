@@ -20,5 +20,7 @@ public interface LowestPriceService {
 
     int setNewProductGrpToKeyword(String keyword, String prodGrpId, double score);
 
+    void deleteKey (String key);
+
     Keyword getLowestPriceProductByKeyword(String keyword);
 }

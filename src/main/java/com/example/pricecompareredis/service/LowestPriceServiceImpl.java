@@ -80,6 +80,9 @@ public class LowestPriceServiceImpl implements LowestPriceService{
 
         return returnInfo;
     }
+    public void deleteKey (String key) {
+        redisTemplate.delete(key);
+    }
 
     public List<ProductGrp> getProdGrpUsingKeyword(String keyword) {
         List<ProductGrp> returnInfo = new ArrayList<>();
